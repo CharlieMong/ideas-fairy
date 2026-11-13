@@ -1,0 +1,85 @@
+# ideas-fairy configuration. Non-secret knobs live here; secrets come from env.
+# Override per-host with config.local.yaml (gitignored) or env vars.
+
+run:
+  # Only ideas scoring >= this novelty threshold (0-1) are eligible for ranking.
+  min_novelty: 0.35
+  # How many top ideas the llama-server should produce.
+  top_n: 10
+  # Max items pulled per source per run (bounded collection).
+  per_source_limit: 40
+  # Lookback window for "emerging" — items older than this are ignored at collect time.
+  lookback_days: 21
+  # Write a local HTML digest alongside the Discord push.
+  write_report: true
+
+llm:
+  # OpenAI-compatible endpoint of your local llama-server.
+  base_url_env: IDEAS_FAIRY_LLM_BASE_URL
+  model_env: IDEAS_FAIRY_LLM_MODEL
+  api_key_env: IDEAS_FAIRY_LLM_API_KEY
+  temperature: 0.4
+  # Hard cap on prompt payload so we never blow the context window.
+  max_context_items: 120
+  request_timeout_s: 180
+
+discord:
+  # Secret source precedence: this env var, then secret_file if set.
+  webhook_env: IDEAS_FAIRY_DISCORD_WEBHOOK
+  secret_file: ""          # optional path to a file containing only the webhook URL
+  username: "ideas-fairy"
+  # Split delivery: a summary message plus one embed per idea (<=10 embeds/msg).
+  mention: ""              # e.g. "<@YOUR_USER_ID>" to ping yourself; leave blank for none
+
+storage:
+  db_path: "data/ideas_fairy.sqlite"
+  raw_dir: "data/raw"      # raw evidence kept separate from processed analysis
+
+sources:
+  arxiv:
+    enabled: true
+    # arXiv categories relevant to offensive security / systems security.
+    categories: ["cs.CR", "cs.SE", "cs.NI"]
+    query_terms: ["offensive security", "exploitation", "fuzzing", "red team",
+                  "evasion", "malware", "side channel", "privilege escalation"]
+  github:
+    enabled: true
+    # Topics + search queries for recently-active offensive tooling.
+    queries: ["topic:offensive-security", "topic:red-team", "topic:exploit",
+              "topic:c2", "topic:fuzzing"]
+    min_stars: 10
+  rss:
+    enabled: true
+    feeds:
+      - "https://labs.watchtowr.com/rss/"
+      - "https://googleprojectzero.blogspot.com/feeds/posts/default"
+      - "https://research.nccgroup.com/feed/"
+      - "https://blog.trailofbits.com/feed/"
+      - "https://portswigger.net/research/rss"
+      - "https://www.sentinelone.com/labs/feed/"
+  reddit:
+    enabled: true
+    subreddits: ["netsec", "ReverseEngineering", "ExploitDev", "Malware"]
+    min_score: 25
+  nvd:
+    enabled: true
+    # Pull recently-published CVEs to surface emerging technique classes.
+    lookback_days: 7
+    min_cvss: 7.0
+  websearch:
+    enabled: false         # opt-in; needs IDEAS_FAIRY_SEARCH_API_KEY
+    provider: "tavily"     # tavily | brave  (key goes in IDEAS_FAIRY_SEARCH_API_KEY)
+    queries: ["emerging offensive security technique 2026",
+              "novel exploitation primitive 2026",
+              "new red team tradecraft",
+              "under-researched attack surface"]
+    # tavily-only knobs:
+    search_depth: "basic"  # basic | advanced
+    topic: "general"       # general | news
+    # brave-only knob:
+    freshness: "pw"        # pd|pw|pm|py or "" ; limits to recent results
+
+gap_analysis:
+  enabled: true
+  # The gap pass asks the model what is adjacent-but-neglected given the corpus.
+  max_themes: 25

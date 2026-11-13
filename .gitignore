@@ -1,0 +1,23 @@
+# Secrets — never commit
+.env
+*.secret
+secrets/
+config.local.yaml
+
+# Evidence store & generated artefacts (keep raw evidence out of VCS)
+data/
+reports/
+*.sqlite
+*.sqlite-*
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+dist/
+build/

@@ -1,0 +1,27 @@
+[project]
+name = "ideas-fairy"
+version = "0.1.0"
+description = "Autonomous offensive-security research-idea scout: collects emerging work, finds gaps, asks a local llama-server for the top 10 research ideas, and pushes them to Discord."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "OverFlowBuff3r" }]
+dependencies = [
+    "httpx>=0.27",
+    "feedparser>=6.0",
+    "pyyaml>=6.0",
+    "python-dateutil>=2.9",
+]
+
+[project.scripts]
+ideas-fairy = "ideas_fairy.cli:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["ideas_fairy"]
